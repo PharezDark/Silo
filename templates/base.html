@@ -50,15 +50,9 @@
                     <a href="{% url 'posts:timeline' %}" class="flex items-center gap-3 px-3 py-2 text-zinc-200 hover:bg-zinc-950 border border-transparent hover:border-zinc-900 rounded-lg transition-all">
                         <span class="text-zinc-600">01 //</span> Home Feed
                     </a>
-                    <a href="#" class="flex items-center gap-3 px-3 py-2 text-zinc-400 hover:text-white hover:bg-zinc-950 border border-transparent hover:border-zinc-900 rounded-lg transition-all">
-                        <span class="text-zinc-600">02 //</span> Wallet Node
-                    </a>
-                    <a href="#" class="flex items-center gap-3 px-3 py-2 text-zinc-400 hover:text-white hover:bg-zinc-950 border border-transparent hover:border-zinc-900 rounded-lg transition-all">
-                        <span class="text-zinc-600">03 //</span> Federation
-                    </a>
                 </nav>
 
-                <a href="#" class="block text-center bg-white hover:bg-zinc-200 text-black font-semibold text-xs font-mono py-3 rounded-lg transition-colors tracking-tight">
+                <a href="{% url 'posts:create_post' %}" class="block text-center bg-white hover:bg-zinc-200 text-black font-semibold text-xs font-mono py-3 rounded-lg transition-colors tracking-tight">
                     + NEW_POST_SIGNAL
                 </a>
             </div>

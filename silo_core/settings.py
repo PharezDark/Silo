@@ -146,6 +146,7 @@ ALLOWED_HOSTS = ['*']
 
 # Application Definition
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -191,6 +192,7 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'silo_core.asgi.application'
 WSGI_APPLICATION = 'silo_core.wsgi.application'
 
 # Core Relational Infrastructure Configuration
@@ -253,3 +255,12 @@ AWS_S3_CUSTOM_DOMAIN = "media.silo.network"  # Points to your R2 custom public d
 
 AWS_DEFAULT_ACL = None
 AWS_S3_FILE_OVERWRITE = False
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}

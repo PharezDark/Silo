@@ -1,54 +1,15 @@
 {% extends 'base.html' %}
-{% load content_filters %}
 
 {% block content %}
-<!-- Left Column: The Interactive Signal Stream -->
 <div class="lg:col-span-2 space-y-6">
-
     <div class="flex items-center justify-between border-b border-zinc-900 pb-3 font-mono text-xs">
         <span class="text-zinc-500">// SIGNAL_CHRONO_STREAM</span>
-        <span class="text-zinc-600">Active Weights: Tech/{{ tech_weight }}% Art/{{ art_weight }}%</span>
+        <span class="text-zinc-600">Active Weights: T/{{ tech_weight }}% A/{{ art_weight }}%</span>
     </div>
 
-    <div class="space-y-4">
+    <div id="timeline-feed" class="space-y-4">
         {% for post in posts %}
-            <article class="bg-zinc-950 border border-zinc-900 rounded-xl p-5 space-y-4 hover:border-zinc-800 transition-colors duration-200">
-
-                <div class="flex justify-between items-center text-xs font-mono">
-                    <div class="flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full {% if post.category == 'tech' %}bg-indigo-500{% elif post.category == 'art' %}bg-emerald-500{% else %}bg-zinc-500{% endif %}"></span>
-                        <span class="text-zinc-300 font-bold">@{{ post.author.username }}</span>
-                    </div>
-                    <span class="text-zinc-600 text-[11px]">{{ post.created_at|timesince }} ago</span>
-                </div>
-
-                <div class="text-zinc-300 text-sm space-y-3 prose prose-invert">
-                    {{ post.content_markdown|render_markdown|safe }}
-                </div>
-
-                {% if post.canvas_image %}
-                    <div class="rounded-lg overflow-hidden border border-zinc-900 bg-zinc-900/20 max-h-[450px] flex items-center justify-center">
-                        <img src="{{ post.canvas_image.url }}" alt="Portfolio Submission Block" class="w-full h-full object-cover">
-                    </div>
-                {% endif %}
-
-                <div class="pt-3 border-t border-zinc-900/50 flex justify-between items-center gap-4">
-                    <div class="flex items-center gap-3">
-                        <!-- Secured Micro-tipping Engine -->
-                        <form method="POST" action="{% url 'billing:send_tip' post.author.id %}" class="inline-block">
-                            {% csrf_token %}
-                            <input type="hidden" name="amount" value="0.50">
-                            <button type="submit" class="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-emerald-400 px-3 py-1.5 rounded-lg text-xs font-mono border border-zinc-800 transition-all flex items-center gap-1.5">
-                                <span>⚡</span> Send $0.50 Tip
-                            </button>
-                        </form>
-                    </div>
-
-                    <span class="text-[10px] font-mono text-zinc-600 truncate max-w-[150px]" title="{{ post.author_signature }}">
-                        SIG://{{ post.id|stringformat:"s"|slice:":8" }}
-                    </span>
-                </div>
-            </article>
+            {% include 'posts/partials/post_card.html' %}
         {% empty %}
             <div class="text-center py-16 border border-dashed border-zinc-900 rounded-xl space-y-2">
                 <p class="text-sm font-mono text-zinc-500">Zero active signals detected in current matrix parameters.</p>
@@ -58,9 +19,8 @@
     </div>
 </div>
 
-<!-- Right Column: Interactive Real-Time Curation Matrix Slider Controls -->
 <div class="lg:col-span-1 space-y-6">
-    <div class="bg-zinc-950 border border-zinc-900 p-5 rounded-xl space-y-5 sticky top-6">
+    <div class="bg-zinc-950 border border-zinc-900 p-5 rounded-xl space-y-5 sticky top-20">
         <div>
             <h3 class="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold">// Curation Matrix</h3>
             <p class="text-[11px] text-zinc-600 leading-snug mt-0.5">Directly balance raw feed delivery without algorithmic interference.</p>
@@ -93,4 +53,30 @@
         </form>
     </div>
 </div>
+
+<script>
+    const wsScheme = window.location.protocol === "https:" ? "wss://" : "ws://";
+    const timelineSocket = new WebSocket(`${wsScheme}${window.location.host}/ws/timeline/`);
+    const feedContainer = document.getElementById('timeline-feed');
+
+    timelineSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+
+        if (data.type === "NEW_POST_SIGNAL") {
+            const techWeight = parseInt(document.getElementsByName('tech')[0]?.value || 50);
+            const artWeight = parseInt(document.getElementsByName('art')[0]?.value || 50);
+
+            if (data.category === 'tech' && techWeight < 20) return;
+            if (data.category === 'art' && artWeight < 20) return;
+
+            const template = document.createElement('div');
+            template.innerHTML = data.html.trim();
+
+            if (feedContainer.children.length === 1 && feedContainer.querySelector('.text-center')) {
+                feedContainer.innerHTML = '';
+            }
+            feedContainer.insertBefore(template.firstChild, feedContainer.firstChild);
+        }
+    };
+</script>
 {% endblock %}
