@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Silo — Sovereign Network{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Smooth custom scrolling for a refined tech aesthetic */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #000000; }
+        ::-webkit-scrollbar-thumb { background: #1f1f22; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #27272a; }
+
+        /* Typography overrides for technical code block presentation */
+        pre { background-color: #09090b !important; border: 1px solid #18181b !important; }
+    </style>
+</head>
+<body class="bg-black text-zinc-100 min-h-screen selection:bg-zinc-800 selection:text-white antialiased">
+
+    <header class="w-full h-14 border-b border-zinc-900 bg-black/80 backdrop-blur sticky top-0 z-50 flex items-center justify-between px-6">
+        <div class="flex items-center gap-3">
+            <span class="text-lg font-black tracking-tighter text-white font-mono">S I L O</span>
+            <span class="text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded uppercase tracking-widest">
+                Dev_Node_Alpha
+            </span>
+        </div>
+
+        <div class="flex items-center gap-6 text-xs font-mono text-zinc-500">
+            <div class="hidden sm:flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>FEDIVERSE // LINKED</span>
+            </div>
+            <div class="bg-zinc-950 px-3 py-1 rounded border border-zinc-900 text-zinc-300">
+                Wallet: <span class="text-emerald-400 font-bold">${{ user.wallet.balance|default:"0.00" }}</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-6 min-h-[calc(100vh-3.5rem)]">
+
+        <aside class="md:col-span-1 py-6 hidden md:flex flex-col justify-between h-[calc(100vh-5rem)] sticky top-14">
+            <div class="space-y-6">
+                <div class="p-4 bg-zinc-950 border border-zinc-900 rounded-xl space-y-2">
+                    <p class="text-sm font-bold text-zinc-200">@{{ user.username }}</p>
+                    <p class="text-[11px] font-mono text-zinc-600 truncate">{{ user.id }}</p>
+                </div>
+
+                <nav class="space-y-1 text-sm font-mono font-medium">
+                    <a href="{% url 'posts:timeline' %}" class="flex items-center gap-3 px-3 py-2 text-zinc-200 hover:bg-zinc-950 border border-transparent hover:border-zinc-900 rounded-lg transition-all">
+                        <span class="text-zinc-600">01 //</span> Home Feed
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2 text-zinc-400 hover:text-white hover:bg-zinc-950 border border-transparent hover:border-zinc-900 rounded-lg transition-all">
+                        <span class="text-zinc-600">02 //</span> Wallet Node
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2 text-zinc-400 hover:text-white hover:bg-zinc-950 border border-transparent hover:border-zinc-900 rounded-lg transition-all">
+                        <span class="text-zinc-600">03 //</span> Federation
+                    </a>
+                </nav>
+
+                <a href="#" class="block text-center bg-white hover:bg-zinc-200 text-black font-semibold text-xs font-mono py-3 rounded-lg transition-colors tracking-tight">
+                    + NEW_POST_SIGNAL
+                </a>
+            </div>
+
+            <div class="text-[10px] font-mono text-zinc-700 border-t border-zinc-950 pt-4 space-y-1">
+                <p>Uptime: 100% // Ping: 14ms</p>
+                <p>© 2026 Silo Protocol Foundation</p>
+            </div>
+        </aside>
+
+        <main class="col-span-1 md:col-span-3 grid grid-cols-1 lg:grid-cols-3 gap-6 py-6">
+            {% block content %}{% endblock %}
+        </main>
+
+    </div>
+
+</body>
+</html>

@@ -10,26 +10,141 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+# from pathlib import Path
+#
+# # Build paths inside the project like this: BASE_DIR / 'subdir'.
+# BASE_DIR = Path(__file__).resolve().parent.parent
+#
+#
+# # Quick-start development settings - unsuitable for production
+# # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+#
+# # SECURITY WARNING: keep the secret key used in production secret!
+# SECRET_KEY = 'django-insecure-xs1gi33w-15sn9o46nmt5=-n0k(d=a+qm#glb@is1(d#k^w9*!'
+#
+# # SECURITY WARNING: don't run with debug turned on in production!
+# DEBUG = True
+#
+# ALLOWED_HOSTS = []
+#
+#
+# # Application definition
+#
+# INSTALLED_APPS = [
+#     'django.contrib.admin',
+#     'django.contrib.auth',
+#     'django.contrib.contenttypes',
+#     'django.contrib.sessions',
+#     'django.contrib.messages',
+#     'django.contrib.staticfiles',
+#     'waitlist',
+#     'users',
+#     'posts',
+#     'billing',
+# ]
+#
+# MIDDLEWARE = [
+#     'django.middleware.security.SecurityMiddleware',
+#     'django.contrib.sessions.middleware.SessionMiddleware',
+#     'django.middleware.common.CommonMiddleware',
+#     'django.middleware.csrf.CsrfViewMiddleware',
+#     'django.contrib.auth.middleware.AuthenticationMiddleware',
+#     'django.contrib.messages.middleware.MessageMiddleware',
+#     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+# ]
+#
+# ROOT_URLCONF = 'silo_core.urls'
+#
+# TEMPLATES = [
+#     {
+#         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+#         'DIRS': [],
+#         'APP_DIRS': True,
+#         'OPTIONS': {
+#             'context_processors': [
+#                 'django.template.context_processors.request',
+#                 'django.contrib.auth.context_processors.auth',
+#                 'django.contrib.messages.context_processors.messages',
+#                 'posts.context_processors.feed_curation_weights',
+#             ],
+#         },
+#     },
+# ]
+#
+# WSGI_APPLICATION = 'silo_core.wsgi.application'
+#
+#
+# # Database
+# # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+#
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'silo_dev',
+#         'USER': 'silo_admin',
+#         'PASSWORD': 'secure_silo_pass_2026',
+#         'HOST': '127.0.0.1',
+#         'PORT': '5432',
+#     }
+# }
+#
+#
+# # Password validation
+# # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
+#
+# AUTH_PASSWORD_VALIDATORS = [
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+#     },
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+#     },
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+#     },
+#     {
+#         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+#     },
+# ]
+#
+#
+# # Internationalization
+# # https://docs.djangoproject.com/en/6.0/topics/i18n/
+#
+# LANGUAGE_CODE = 'en-us'
+#
+# TIME_ZONE = 'UTC'
+#
+# USE_I18N = True
+#
+# USE_TZ = True
+#
+#
+# # Static files (CSS, JavaScript, Images)
+# # https://docs.djangoproject.com/en/6.0/howto/static-files/
+#
+# STATIC_URL = 'static/'
+#
+# AUTH_USER_MODEL = 'users.User'
+#
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = BASE_DIR / 'media'
+#
+# CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+#
+# STRIPE_SECRET_KEY = "sk_test_..."
+# STRIPE_WEBHOOK_SECRET = "whsec_..."
+
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-xs1gi33w-15sn9o46nmt5=-n0k(d=a+qm#glb@is1(d#k^w9*!'
-
-# SECURITY WARNING: don't run with debug turned on in production!
+SECRET_KEY = 'django-insecure-silo-core-protocol-secret-2026'
 DEBUG = True
+ALLOWED_HOSTS = ['*']
 
-ALLOWED_HOSTS = []
-
-
-# Application definition
-
+# Application Definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -37,7 +152,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'waitlist',
+
+    # Silo Core Architecture Nodes
+    'users.apps.UsersConfig',
+    'waitlist.apps.WaitlistConfig',
+    'posts.apps.PostsConfig',
+    'billing.apps.BillingConfig',
 ]
 
 MIDDLEWARE = [
@@ -55,13 +175,17 @@ ROOT_URLCONF = 'silo_core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],  # Global root template directory resolution
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                # Phase 4: Dynamic Matrix Slider Sync Engine
+                'posts.context_processors.feed_curation_weights',
             ],
         },
     },
@@ -69,10 +193,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'silo_core.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
+# Core Relational Infrastructure Configuration
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -80,43 +201,55 @@ DATABASES = {
         'USER': 'silo_admin',
         'PASSWORD': 'secure_silo_pass_2026',
         'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'PORT': '5433',
     }
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
+# Overriding Default Identity Schemes
+AUTH_USER_MODEL = 'users.User'
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/6.0/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
-
 STATIC_URL = 'static/'
+
+# Phase 2 High Resolution Uncompressed Media Configuration Paths
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Phase 5 Commercial Core Integration Variables
+STRIPE_SECRET_KEY = "sk_test_mock_key_2026"
+STRIPE_WEBHOOK_SECRET = "whsec_mock_secret_2026"
+
+# ==============================================================================
+# CLOUDFLARE R2 OBJECT STORAGE CONFIGURATION
+# ==============================================================================
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+# Cloudflare R2 uses the standard S3 API layer
+AWS_ACCESS_KEY_ID = "your_r2_access_key_id"
+AWS_SECRET_ACCESS_KEY = "your_r2_secret_access_key"
+AWS_STORAGE_BUCKET_NAME = "silo-creator-canvases"
+AWS_S3_ENDPOINT_URL = "https://your_account_id.r2.cloudflarestorage.com"
+AWS_S3_CUSTOM_DOMAIN = "media.silo.network"  # Points to your R2 custom public domain
+
+AWS_DEFAULT_ACL = None
+AWS_S3_FILE_OVERWRITE = False
