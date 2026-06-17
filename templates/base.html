@@ -1,73 +1,106 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full bg-zinc-950">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Silo — Sovereign Network{% endblock %}</title>
+    <title>{% block title %}Silo{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Smooth custom scrolling for a refined tech aesthetic */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #000000; }
-        ::-webkit-scrollbar-thumb { background: #1f1f22; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #27272a; }
-
-        /* Typography overrides for technical code block presentation */
-        pre { background-color: #09090b !important; border: 1px solid #18181b !important; }
-    </style>
 </head>
-<body class="bg-black text-zinc-100 min-h-screen selection:bg-zinc-800 selection:text-white antialiased">
+<body class="h-full text-zinc-100 font-sans antialiased bg-zinc-950 selection:bg-indigo-500 selection:text-white">
 
-    <header class="w-full h-14 border-b border-zinc-900 bg-black/80 backdrop-blur sticky top-0 z-50 flex items-center justify-between px-6">
-        <div class="flex items-center gap-3">
-            <span class="text-lg font-black tracking-tighter text-white font-mono">S I L O</span>
-            <span class="text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded uppercase tracking-widest">
-                Dev_Node_Alpha
-            </span>
-        </div>
+    <div class="min-h-full max-w-[1250px] mx-auto grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-0">
 
-        <div class="flex items-center gap-6 text-xs font-mono text-zinc-500">
-            <div class="hidden sm:flex items-center gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>FEDIVERSE // LINKED</span>
-            </div>
-            <div class="bg-zinc-950 px-3 py-1 rounded border border-zinc-900 text-zinc-300">
-                Wallet: <span class="text-emerald-400 font-bold">${{ user.wallet.balance|default:"0.00" }}</span>
-            </div>
-        </div>
-    </header>
-
-    <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-6 min-h-[calc(100vh-3.5rem)]">
-
-        <aside class="md:col-span-1 py-6 hidden md:flex flex-col justify-between h-[calc(100vh-5rem)] sticky top-14">
+        <aside class="md:col-span-1 lg:col-span-3 h-screen sticky top-0 px-4 py-6 border-r border-zinc-900 flex flex-col justify-between">
             <div class="space-y-6">
-                <div class="p-4 bg-zinc-950 border border-zinc-900 rounded-xl space-y-2">
-                    <p class="text-sm font-bold text-zinc-200">@{{ user.username }}</p>
-                    <p class="text-[11px] font-mono text-zinc-600 truncate">{{ user.id }}</p>
+                <div class="flex items-center gap-2.5 px-2">
+                    <div class="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-xs text-white tracking-tighter">S</div>
+                    <span class="text-lg font-bold tracking-tight text-zinc-100">Silo</span>
                 </div>
 
-                <nav class="space-y-1 text-sm font-mono font-medium">
-                    <a href="{% url 'posts:timeline' %}" class="flex items-center gap-3 px-3 py-2 text-zinc-200 hover:bg-zinc-950 border border-transparent hover:border-zinc-900 rounded-lg transition-all">
-                        <span class="text-zinc-600">01 //</span> Home Feed
+                <nav class="space-y-1">
+                    <a href="{% url 'posts:timeline' %}" class="flex items-center gap-4 px-3 py-3 text-zinc-300 hover:text-white hover:bg-zinc-900/60 rounded-xl transition-all font-medium text-[15px]">
+                        Home
+                    </a>
+                    <a href="{% url 'explore' %}" class="flex items-center gap-4 px-3 py-3 text-zinc-400 hover:text-white hover:bg-zinc-900/60 rounded-xl transition-all font-medium text-[15px]">
+                        Explore
+                    </a>
+                    <a href="{% url 'chat' %}" class="flex items-center gap-4 px-3 py-3 text-zinc-400 hover:text-white hover:bg-zinc-900/60 rounded-xl transition-all font-medium text-[15px]">
+                        Chat
+                    </a>
+                    <a href="{% url 'profile' %}" class="flex items-center gap-4 px-3 py-3 text-zinc-400 hover:text-white hover:bg-zinc-900/60 rounded-xl transition-all font-medium text-[15px]">
+                        Profile
                     </a>
                 </nav>
 
-                <a href="{% url 'posts:create_post' %}" class="block text-center bg-white hover:bg-zinc-200 text-black font-semibold text-xs font-mono py-3 rounded-lg transition-colors tracking-tight">
-                    + NEW_POST_SIGNAL
-                </a>
+                <div class="pt-2">
+                    <a href="{% url 'posts:create_post' %}" class="block text-center bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm py-3 rounded-full transition-colors shadow-md">
+                        Publish Post
+                    </a>
+                </div>
             </div>
 
-            <div class="text-[10px] font-mono text-zinc-700 border-t border-zinc-950 pt-4 space-y-1">
-                <p>Uptime: 100% // Ping: 14ms</p>
-                <p>© 2026 Silo Protocol Foundation</p>
-            </div>
+            {% if request.user.is_authenticated and request.user.username %}
+                <div class="p-3.5 bg-zinc-900/40 border border-zinc-850 rounded-2xl flex flex-col gap-2 text-xs">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <span class="text-zinc-200 font-semibold truncate">@{{ request.user.username }}</span>
+                    </div>
+                    {% if request.user.public_key %}
+                        <div class="text-zinc-500 space-y-1">
+                            <span class="block text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">User ID Key:</span>
+                            <p class="font-mono text-[10px] truncate bg-zinc-950 p-2 rounded-lg border border-zinc-900 text-zinc-400">
+                                {{ request.user.public_key }}
+                            </p>
+                        </div>
+                    {% endif %}
+                    <a href="{% url 'logout' %}" class="text-[11px] text-zinc-500 hover:text-red-400 font-medium transition-colors pt-1 border-t border-zinc-900">
+                        Log out of account
+                    </a>
+                </div>
+            {% endif %}
         </aside>
 
-        <main class="col-span-1 md:col-span-3 grid grid-cols-1 lg:grid-cols-3 gap-6 py-6">
-            {% block content %}{% endblock %}
+        <main class="md:col-span-3 lg:col-span-9 grid grid-cols-1 lg:grid-cols-9 min-h-screen">
+            {% block content %}
+            {% endblock %}
         </main>
 
     </div>
+    <script>
+    function toggleFollow(username) {
+        const url = `/users/${username}/follow/`;
+        const btn = document.getElementById(`follow-btn-${username}`);
+        const countElement = document.getElementById(`follower-count-${username}`);
 
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update button styles and text dynamically
+                if (data.is_following) {
+                    btn.innerText = 'Following';
+                    btn.className = "w-full text-xs font-semibold py-2 rounded-xl transition-all border bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200";
+                } else {
+                    btn.innerText = 'Follow';
+                    btn.className = "w-full text-xs font-semibold py-2 rounded-xl transition-all border bg-zinc-100 border-transparent text-zinc-950 hover:bg-zinc-200";
+                }
+
+                // Update follower count text if the element exists on the current page
+                if (countElement) {
+                    countElement.innerText = `${data.follower_count} follower${data.follower_count === 1 ? '' : 's'}`;
+                }
+            } else if (data.error) {
+                alert(data.error);
+            }
+        })
+        .catch(error => console.error('Error handling follow state execution:', error));
+    }
+    </script>
 </body>
 </html>

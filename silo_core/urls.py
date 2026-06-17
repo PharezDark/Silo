@@ -18,13 +18,42 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from users.views import RegisterNodeView, LoginNodeView, LogoutNodeView, ToggleFollowView
+
+
+# Simple class-based views to serve the placeholder layout shells
+class ExploreView(TemplateView): template_name = 'pages/explore.html'
+
+
+class ChatView(LoginRequiredMixin, TemplateView): template_name = 'pages/chat.html'
+
+
+class ProfileView(LoginRequiredMixin, TemplateView): template_name = 'pages/profile.html'
+
 
 urlpatterns = [
+    # Core Admin & App Apps
     path('admin/', admin.site.urls),
     path('', include('waitlist.urls')),
     path('feed/', include('posts.urls')),
     path('billing/', include('billing.urls')),
+
+    # Navigation Targets
+    path('explore/', ExploreView.as_view(), name='explore'),
+    path('chat/', ChatView.as_view(), name='chat'),
+    path('profile/', ProfileView.as_view(), name='profile'),
+
+    # Auth Endpoints
+    path('auth/register/', RegisterNodeView.as_view(), name='register'),
+    path('auth/login/', LoginNodeView.as_view(), name='login'),
+    path('auth/logout/', LogoutNodeView.as_view(), name='logout'),
+
+    # Social Interaction Endpoints
+    path('users/<str:username>/follow/', ToggleFollowView.as_view(), name='toggle_follow'),
 ]
 
+# Media assets serving during local development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

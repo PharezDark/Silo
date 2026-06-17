@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="lg:col-span-6 border-r border-zinc-900 min-h-screen">
+    <div class="h-32 bg-zinc-900 border-b border-zinc-800 relative">
+        <div class="absolute -bottom-10 left-6 w-20 h-20 bg-zinc-800 border-4 border-zinc-950 rounded-full flex items-center justify-center font-bold text-zinc-400 text-xl uppercase">
+            {{ request.user.username|slice:":2" }}
+        </div>
+    </div>
+    <div class="px-6 pt-14 pb-6 border-b border-zinc-900 space-y-3">
+        <div>
+            <h2 class="text-xl font-bold text-white">@{{ request.user.username }}</h2>
+            <p class="text-xs text-zinc-500 font-mono mt-0.5">Joined June 2026</p>
+        </div>
+        <div class="flex gap-4 text-xs text-zinc-400 pt-1">
+            <span><strong class="text-zinc-200">{{ request.user.following.count }}</strong> Following</span>
+            <span><strong class="text-zinc-200">{{ request.user.followers.count }}</strong> Followers</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

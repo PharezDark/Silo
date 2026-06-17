@@ -18,13 +18,14 @@ class User(AbstractUser):
     # server-side requires strict envelope encryption.
     private_key = models.TextField(blank=True, editable=False)
 
-    # Many-to-Many Relationship for Followers/Following
+    # Many-to-Many Asymmetric Relationship management via custom 'Follow' link table
     following = models.ManyToManyField(
         'self',
         through='Follow',
         through_fields=('follower', 'following'),
         symmetrical=False,
-        related_name='followers'
+        related_name='followers',
+        blank=True  # Added blank=True from your first block so registration doesn't require relationships
     )
 
     def save(self, *args, **kwargs):
@@ -68,4 +69,4 @@ class Follow(models.Model):
         unique_together = ('follower', 'following')
 
     def __str__(self):
-        return f"@{self.follower.username} follows @self.following.username"
+        return f"@{self.follower.username} follows @{self.following.username}" # Fixed string interpolation syntax

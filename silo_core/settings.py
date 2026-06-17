@@ -130,12 +130,12 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 # MEDIA_URL = '/media/'
 # MEDIA_ROOT = BASE_DIR / 'media'
 #
-# CELERY_BROKER_URL = 'redis://localhost:6379/0'
-# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
 #
 # STRIPE_SECRET_KEY = "sk_test_..."
 # STRIPE_WEBHOOK_SECRET = "whsec_..."
 
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -169,6 +169,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'silo_core.middleware.AbsoluteRateLimitMiddleware',
 ]
 
 ROOT_URLCONF = 'silo_core.urls'
@@ -224,9 +225,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# Phase 2 High Resolution Uncompressed Media Configuration Paths
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -237,14 +238,28 @@ STRIPE_WEBHOOK_SECRET = "whsec_mock_secret_2026"
 # ==============================================================================
 # CLOUDFLARE R2 OBJECT STORAGE CONFIGURATION
 # ==============================================================================
-STORAGES = {
-    "default": {
-        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-    },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
-}
+
+# Toggle backend engines safely depending on the current operational state
+if DEBUG:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        }
+    }
+else:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        }
+    }
+
+
 
 # Cloudflare R2 uses the standard S3 API layer
 AWS_ACCESS_KEY_ID = "your_r2_access_key_id"
@@ -264,3 +279,10 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
+CELERY_TASK_ALWAYS_EAGER = True
+
+LOGIN_URL = 'login'

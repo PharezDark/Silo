@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-zinc-950">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silo - Create Account</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="h-full flex items-center justify-center bg-zinc-950 text-zinc-100 antialiased font-sans px-4">
+
+    <div class="max-w-md w-full space-y-6 bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-xl">
+        <div class="space-y-2 text-center">
+            <h1 class="text-2xl font-bold tracking-tight text-white">Create your account</h1>
+            <p class="text-sm text-zinc-400">Join Silo to start publishing and sharing your portfolio.</p>
+        </div>
+
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="bg-red-950/40 border border-red-900 text-red-400 p-3 rounded-xl text-xs font-medium space-y-1">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="space-y-1">
+                <label class="block text-xs font-medium text-zinc-400">Username</label>
+                <input type="text" name="username" required
+                       value="{{ form.username.value|default:'' }}"
+                       class="w-full bg-zinc-950 border border-zinc-800 focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none transition-all">
+                {% if form.username.errors %}
+                    <p class="text-xs text-red-400 mt-1">{{ form.username.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="space-y-1">
+                <label class="block text-xs font-medium text-zinc-400">Email Address</label>
+                <input type="email" name="email" required
+                       value="{{ form.email.value|default:'' }}"
+                       class="w-full bg-zinc-950 border border-zinc-800 focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none transition-all">
+                {% if form.email.errors %}
+                    <p class="text-xs text-red-400 mt-1">{{ form.email.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="space-y-1 relative">
+                <label class="block text-xs font-medium text-zinc-400">Password</label>
+                <div class="relative flex items-center">
+                    <input type="password" id="id_password1" name="password1" required
+                           class="w-full bg-zinc-950 border border-zinc-800 focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 rounded-xl pl-4 pr-11 py-2.5 text-sm text-zinc-200 focus:outline-none transition-all">
+                    <button type="button" onclick="togglePassword('id_password1', 'eye-icon-1')" class="absolute right-3 p-1 text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none">
+                        <i id="eye-icon-1" data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                {% if form.password1.errors %}
+                    <p class="text-xs text-red-400 mt-1">{{ form.password1.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="space-y-1 relative">
+                <label class="block text-xs font-medium text-zinc-400">Confirm Password</label>
+                <div class="relative flex items-center">
+                    <input type="password" id="id_password2" name="password2" required
+                           class="w-full bg-zinc-950 border border-zinc-800 focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 rounded-xl pl-4 pr-11 py-2.5 text-sm text-zinc-200 focus:outline-none transition-all">
+                    <button type="button" onclick="togglePassword('id_password2', 'eye-icon-2')" class="absolute right-3 p-1 text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none">
+                        <i id="eye-icon-2" data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                {% if form.password2.errors %}
+                    <p class="text-xs text-red-400 mt-1">{{ form.password2.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-950 text-sm font-semibold py-3 rounded-xl transition-colors shadow-sm">
+                Sign Up
+            </button>
+        </form>
+
+        <div class="text-center text-xs text-zinc-500">
+            Already have an account? <a href="{% url 'login' %}" class="text-zinc-300 hover:underline">Log in</a>
+        </div>
+    </div>
+
+    <script>
+        // Initialize the icon set
+        lucide.createIcons();
+
+        function togglePassword(inputId, iconId) {
+            const passwordInput = document.getElementById(inputId);
+            const iconElement = document.getElementById(iconId);
+
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                iconElement.setAttribute("data-lucide", "eye-off");
+            } else {
+                passwordInput.type = "password";
+                iconElement.setAttribute("data-lucide", "eye");
+            }
+            // Re-render the targeted icon element
+            lucide.createIcons({
+                nameAttr: 'id',
+                attrs: [iconElement]
+            });
+            // Fallback sweep to make sure lucide catches it cleanly
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>

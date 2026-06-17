@@ -1,54 +1,96 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="lg:col-span-2 space-y-6">
-    <div class="flex items-center justify-between border-b border-zinc-900 pb-3 font-mono text-xs">
-        <span class="text-zinc-500">// SIGNAL_CHRONO_STREAM</span>
-        <span class="text-zinc-600">Active Weights: T/{{ tech_weight }}% A/{{ art_weight }}%</span>
+<div class="lg:col-span-6 border-r border-zinc-900 min-h-screen">
+    <div class="sticky top-0 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-900 px-6 py-4 flex items-center justify-between z-10">
+        <h2 class="text-xl font-bold tracking-tight text-zinc-100">Home</h2>
+        <span class="text-xs text-zinc-500 font-medium">Spectrum: T/{{ tech_weight }}% A/{{ art_weight }}%</span>
     </div>
 
-    <div id="timeline-feed" class="space-y-4">
+    {% if request.user.is_authenticated %}
+    <div class="p-6 border-b border-zinc-900 bg-zinc-900/10">
+        <form method="POST" action="{% url 'posts:create_post' %}" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-sm font-semibold text-zinc-300 select-none uppercase">
+                    {{ request.user.username|slice:":2" }}
+                </div>
+                <div class="flex-1 space-y-3">
+                    <textarea name="content_markdown" required rows="3" placeholder="What's on your mind? Share your development updates or artwork..."
+                              class="w-full bg-transparent text-zinc-100 text-[15px] placeholder:text-zinc-600 resize-none focus:outline-none focus:ring-0"></textarea>
+
+                    <div class="flex items-center justify-between pt-2 border-t border-zinc-900/60">
+                        <div class="flex items-center gap-4">
+                            <select name="category" class="bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded-lg px-3 py-1.5 focus:outline-none transition-colors">
+                                <option value="tech">Technology / Dev</option>
+                                <option value="art">Digital Art / Portfolio</option>
+                            </select>
+
+                            <label class="cursor-pointer text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1">
+                                <input type="file" name="canvas_image" accept="image/*" class="hidden">
+                                <span>Add Image</span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-5 py-2 rounded-full transition-colors shadow-sm">
+                            Post
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <div id="timeline-feed" class="divide-y divide-zinc-900">
         {% for post in posts %}
-            {% include 'posts/partials/post_card.html' %}
+            <div class="p-6 hover:bg-zinc-900/20 transition-colors">
+                {% include 'posts/partials/post_card.html' %}
+            </div>
         {% empty %}
-            <div class="text-center py-16 border border-dashed border-zinc-900 rounded-xl space-y-2">
-                <p class="text-sm font-mono text-zinc-500">Zero active signals detected in current matrix parameters.</p>
-                <p class="text-xs text-zinc-600">Try adjusting your content sliders to recalibrate transmission weightings.</p>
+            <div class="text-center py-20 px-6 space-y-2">
+                <p class="text-base font-semibold text-zinc-300">Your feed is looking a bit quiet</p>
+                <p class="text-sm text-zinc-500 max-w-xs mx-auto leading-relaxed">Adjust your active filter weights or follow more creators to populate your feed stream.</p>
             </div>
         {% endfor %}
     </div>
 </div>
 
-<div class="lg:col-span-1 space-y-6">
-    <div class="bg-zinc-950 border border-zinc-900 p-5 rounded-xl space-y-5 sticky top-20">
+<div class="hidden lg:block lg:col-span-3 px-6 py-6 space-y-6">
+    <div class="relative flex items-center">
+        <input type="text" placeholder="Search platform..."
+               class="w-full bg-zinc-900 border border-transparent focus:border-zinc-800 focus:bg-zinc-950 text-sm rounded-full pl-5 pr-4 py-2.5 text-zinc-200 placeholder:text-zinc-500 focus:outline-none transition-all">
+    </div>
+
+    <div class="bg-zinc-900/50 border border-zinc-850 p-5 rounded-2xl space-y-4 shadow-sm">
         <div>
-            <h3 class="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold">// Curation Matrix</h3>
-            <p class="text-[11px] text-zinc-600 leading-snug mt-0.5">Directly balance raw feed delivery without algorithmic interference.</p>
+            <h3 class="text-sm font-bold text-zinc-200">Feed Controls</h3>
+            <p class="text-xs text-zinc-400 mt-0.5 leading-normal">Manually balance your feed mix without algorithmic bias.</p>
         </div>
 
         <form method="GET" action="." class="space-y-4">
             <div class="space-y-1.5">
-                <div class="flex justify-between text-[11px] font-mono">
-                    <span class="text-zinc-500">DEVLOGS / TECH</span>
-                    <span class="text-indigo-400 font-bold" id="tech_val">{{ tech_weight }}%</span>
+                <div class="flex justify-between text-xs font-semibold">
+                    <span class="text-zinc-400">Development</span>
+                    <span class="text-indigo-400" id="tech_val">{{ tech_weight }}%</span>
                 </div>
                 <input type="range" name="tech" min="0" max="100" value="{{ tech_weight }}"
-                       class="w-full h-1 bg-zinc-900 rounded appearance-none cursor-pointer accent-indigo-500"
+                       class="w-full h-1 bg-zinc-950 rounded appearance-none cursor-pointer accent-indigo-500"
                        oninput="document.getElementById('tech_val').innerText = this.value + '%'">
             </div>
 
             <div class="space-y-1.5">
-                <div class="flex justify-between text-[11px] font-mono">
-                    <span class="text-zinc-500">PORTFOLIOS / ART</span>
-                    <span class="text-emerald-400 font-bold" id="art_val">{{ art_weight }}%</span>
+                <div class="flex justify-between text-xs font-semibold">
+                    <span class="text-zinc-400">Design & Art</span>
+                    <span class="text-emerald-400" id="art_val">{{ art_weight }}%</span>
                 </div>
                 <input type="range" name="art" min="0" max="100" value="{{ art_weight }}"
-                       class="w-full h-1 bg-zinc-900 rounded appearance-none cursor-pointer accent-emerald-400"
+                       class="w-full h-1 bg-zinc-950 rounded appearance-none cursor-pointer accent-emerald-400"
                        oninput="document.getElementById('art_val').innerText = this.value + '%'">
             </div>
 
-            <button type="submit" class="w-full text-xs font-mono border border-zinc-800 hover:border-zinc-700 bg-zinc-900 hover:bg-zinc-850 text-zinc-200 py-2 rounded-lg transition-all">
-                Update Signal Spectrum
+            <button type="submit" class="w-full text-xs font-bold bg-zinc-100 hover:bg-zinc-200 text-zinc-950 py-2.5 rounded-xl transition-all shadow-sm">
+                Save Filter Adjustments
             </button>
         </form>
     </div>
@@ -61,7 +103,6 @@
 
     timelineSocket.onmessage = function(e) {
         const data = JSON.parse(e.data);
-
         if (data.type === "NEW_POST_SIGNAL") {
             const techWeight = parseInt(document.getElementsByName('tech')[0]?.value || 50);
             const artWeight = parseInt(document.getElementsByName('art')[0]?.value || 50);
@@ -70,12 +111,13 @@
             if (data.category === 'art' && artWeight < 20) return;
 
             const template = document.createElement('div');
+            template.className = "p-6 hover:bg-zinc-900/20 transition-colors";
             template.innerHTML = data.html.trim();
 
             if (feedContainer.children.length === 1 && feedContainer.querySelector('.text-center')) {
                 feedContainer.innerHTML = '';
             }
-            feedContainer.insertBefore(template.firstChild, feedContainer.firstChild);
+            feedContainer.insertBefore(template, feedContainer.firstChild);
         }
     };
 </script>

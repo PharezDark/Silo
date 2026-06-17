@@ -1,0 +1,23 @@
+<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex flex-col items-center text-center space-y-4 shadow-sm">
+    <div class="space-y-1">
+        <h3 class="text-sm font-semibold text-zinc-200">@{{ target_user.username }}</h3>
+        <p class="text-xs text-zinc-500" id="follower-count-{{ target_user.username }}">
+            {{ target_user.followers.count }} follower{{ target_user.followers.count|pluralize }}
+        </p>
+    </div>
+
+    <button onclick="toggleFollow('{{ target_user.username }}')"
+            id="follow-btn-{{ target_user.username }}"
+            class="w-full text-xs font-semibold py-2 rounded-xl transition-all border
+                   {% if request.user in target_user.followers.all %}
+                       bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-zinc-200
+                   {% else %}
+                       bg-zinc-100 border-transparent text-zinc-950 hover:bg-zinc-200
+                   {% endif %}">
+        {% if request.user in target_user.followers.all %}
+            Following
+        {% else %}
+            Follow
+        {% endif %}
+    </button>
+</div>

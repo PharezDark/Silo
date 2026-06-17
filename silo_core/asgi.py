@@ -15,14 +15,14 @@ import posts.routing
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'silo_core.settings')
 
-# Initialize the standard HTTP ASGI handler early
+# Initialize the standard HTTP ASGI handler early to safeguard app registry loading
 django_asgi_app = get_asgi_application()
 
 application = ProtocolTypeRouter({
-    # Handles traditional HTTP requests
+    # Handles traditional HTTP requests safely via the pre-loaded application instance
     "http": django_asgi_app,
 
-    # Handles persistent live WebSocket connections
+    # Handles persistent live WebSocket connections with middleware state management
     "websocket": AuthMiddlewareStack(
         URLRouter(
             posts.routing.websocket_urlpatterns
