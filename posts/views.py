@@ -1,6 +1,8 @@
 import redis
-from django.shortcuts import render, redirect
-from django.views.generic import ListView, CreateView
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.views import View
+from django.views.generic import ListView, CreateView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.urls import reverse_lazy
@@ -9,6 +11,16 @@ from .models import Post
 # Create your views here.
 
 r = redis.Redis(host='127.0.0.1', port=6379, db=1)
+
+
+class WelcomePageView(TemplateView):
+    template_name = 'pages/welcome.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        # If the user is already logged in, skip the welcome page and send them straight to the feed
+        if request.user.is_authenticated:
+            return redirect('posts:timeline')
+        return super().dispatch(request, *args, **kwargs)
 
 
 class HomeTimelineView(ListView):
@@ -58,3 +70,23 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         # Tie the logged-in user session to the post author field
         form.instance.author = self.request.user
         return super().form_valid(form)
+
+
+class ToggleLikeView(LoginRequiredMixin, View):
+    def post(self, request, post_id):
+        # Fetches the post by its UUID string
+        post = get_object_or_404(Post, id=post_id)
+
+        # Check if the user has already liked the post
+        if post.likes.filter(id=request.user.id).exists():
+            post.likes.remove(request.user)
+            is_liked = False
+        else:
+            post.likes.add(request.user)
+            is_liked = True
+
+        return JsonResponse({
+            "success": True,
+            "is_liked": is_liked,
+            "like_count": post.likes.count()
+        })

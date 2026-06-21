@@ -156,9 +156,9 @@ INSTALLED_APPS = [
 
     # Silo Core Architecture Nodes
     'users.apps.UsersConfig',
-    'waitlist.apps.WaitlistConfig',
     'posts.apps.PostsConfig',
     'billing.apps.BillingConfig',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -272,10 +272,12 @@ AWS_DEFAULT_ACL = None
 AWS_S3_FILE_OVERWRITE = False
 
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+            # ADD OR MODIFY THIS LINE TO MATCH CHANNELS WITH YOUR ACTIVE REDIS WORKER DB
+            "db": 1,
         },
     },
 }
@@ -286,3 +288,5 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_TASK_ALWAYS_EAGER = True
 
 LOGIN_URL = 'login'
+# Where to send users immediately after they log out
+LOGOUT_REDIRECT_URL = 'login'

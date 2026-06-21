@@ -5,8 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .tasks import fan_out_post
 
-
-# Create your models here.
+#Create your models here
 
 def get_upload_path(instance, filename):
     # Organizes uploads cleanly by user UUID in the storage backend
@@ -37,6 +36,13 @@ class Post(models.Model):
     # Categorization and Feed weights field
     category = models.CharField(max_length=15, choices=CATEGORY_CHOICES, default='general')
 
+    # Interactive Many-to-Many Relationship
+    likes = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='liked_posts',
+        blank=True
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -55,4 +61,5 @@ class Post(models.Model):
 def trigger_fan_out(sender, instance, created, **kwargs):
     if created:
         # Offload the timeline delivery to the Celery background worker
+        # Note: instance.id is a UUID object here. Celery handles UUID serialization automatically.
         fan_out_post.delay(instance.id, instance.author.id)

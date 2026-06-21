@@ -20,23 +20,25 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from users.views import RegisterNodeView, LoginNodeView, LogoutNodeView, ToggleFollowView
+from posts.views import WelcomePageView  # Import the gatekeeper view
+from users.views import RegisterNodeView, LoginNodeView, LogoutNodeView, ToggleFollowView, ExploreView
 
 
 # Simple class-based views to serve the placeholder layout shells
-class ExploreView(TemplateView): template_name = 'pages/explore.html'
+class ChatView(LoginRequiredMixin, TemplateView):
+    template_name = 'pages/chat.html'
 
 
-class ChatView(LoginRequiredMixin, TemplateView): template_name = 'pages/chat.html'
-
-
-class ProfileView(LoginRequiredMixin, TemplateView): template_name = 'pages/profile.html'
+class ProfileView(LoginRequiredMixin, TemplateView):
+    template_name = 'pages/profile.html'
 
 
 urlpatterns = [
-    # Core Admin & App Apps
+    # Core Admin & Root Routing Gatekeeper
     path('admin/', admin.site.urls),
-    path('', include('waitlist.urls')),
+    path('', WelcomePageView.as_view(), name='welcome'),
+
+    # Federated App Ecosystem Sub-routing Modules
     path('feed/', include('posts.urls')),
     path('billing/', include('billing.urls')),
 

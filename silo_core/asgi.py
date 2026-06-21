@@ -11,7 +11,9 @@ import os
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
-import posts.routing
+
+import chat.routing   # Import your brand new chat tracking route array
+import posts.routing  # Import your timeline/notification tracking route array
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'silo_core.settings')
 
@@ -25,7 +27,8 @@ application = ProtocolTypeRouter({
     # Handles persistent live WebSocket connections with middleware state management
     "websocket": AuthMiddlewareStack(
         URLRouter(
-            posts.routing.websocket_urlpatterns
+            # Merged array routing combinations
+            chat.routing.websocket_urlpatterns + posts.routing.websocket_urlpatterns
         )
     ),
 })

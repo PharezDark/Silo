@@ -1,17 +1,28 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views import View
+from django.views.generic import ListView
 from django.contrib.auth import login, authenticate, logout, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.forms import AuthenticationForm
 from .forms import CustomUserCreationForm  # Custom registration form we created earlier
 
+User = get_user_model()
 
-# Create your views here.
+
+class ExploreView(LoginRequiredMixin, ListView):
+    model = User
+    template_name = 'pages/explore.html'
+    context_object_name = 'discovered_users'
+
+    def get_queryset(self):
+        # Return other users on the platform so the current user can discover them
+        # We exclude the current user from their own discovery list
+        return User.objects.exclude(id=self.request.user.id).order_by('?')[:10]
+
 
 class ActivityPubActorView(View):
     def get(self, request, username, *args, **kwargs):
-        User = get_user_model()
         user = get_object_or_404(User, username=username)
 
         # Build the absolute URIs for federated resource routing
@@ -26,8 +37,8 @@ class ActivityPubActorView(View):
             "id": actor_uri,
             "type": "Person",
             "preferredUsername": user.username,
-            "name": user.display_name or user.username,
-            "summary": user.bio,
+            "name": getattr(user, 'display_name', user.username) or user.username,
+            "summary": getattr(user, 'bio', ''),
             "inbox": request.build_absolute_uri(f'/feed/actor/{user.username}/inbox/'),
             "outbox": request.build_absolute_uri(f'/feed/actor/{user.username}/outbox/'),
 
@@ -35,7 +46,7 @@ class ActivityPubActorView(View):
             "publicKey": {
                 "id": f"{actor_uri}#main-key",
                 "owner": actor_uri,
-                "publicKeyPem": user.public_key
+                "publicKeyPem": getattr(user, 'public_key', '')
             }
         }
 
@@ -80,7 +91,6 @@ class LogoutNodeView(View):
 
 class ToggleFollowView(LoginRequiredMixin, View):
     def post(self, request, username):
-        User = get_user_model()
         target_user = get_object_or_404(User, username=username)
 
         # Prevent users from following themselves
