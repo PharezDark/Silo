@@ -5,8 +5,8 @@
 <div class="lg:col-span-6 border-r border-zinc-900 min-h-screen">
     <!-- Sticky Sub-Navigation Header Matrix -->
     <div class="sticky top-0 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-900 px-6 py-4 z-10">
-        <h2 class="text-xl font-bold tracking-tight text-zinc-100">Explore</h2>
-        <p class="text-xs text-zinc-500 mt-0.5">Discover trending topics, developer logs, and digital portfolios across the platform.</p>
+        <h2 class="text-xl font-bold tracking-tight text-zinc-100">Explore Creators</h2>
+        <p class="text-xs text-zinc-500 mt-0.5">Discover and connect with developers, artists, and builders across the platform.</p>
     </div>
 
     <!-- Active Grid Processing Segment -->
@@ -16,7 +16,35 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {% for target_user in discovered_users %}
-                    {% include 'users/partials/profile_card.html' %}
+                    <div class="bg-zinc-900 border border-zinc-850 rounded-2xl p-6 flex flex-col justify-between items-center text-center shadow-xl transition-all hover:border-zinc-700">
+
+                        <div class="flex flex-col items-center space-y-4 w-full">
+                            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-200">
+                                <span class="text-2xl font-black text-white uppercase tracking-wider">
+                                    {{ target_user.username|slice:":2" }}
+                                </span>
+                            </div>
+
+                            <div class="space-y-1">
+                                <h2 class="text-lg font-bold text-zinc-100 tracking-tight">@{{ target_user.username }}</h2>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 w-full mt-6">
+                            <a href="{% url 'chat:start_chat' target_user.username %}"
+                               class="flex items-center justify-center px-4 py-2.5 bg-zinc-800 hover:bg-zinc-750 text-xs font-bold rounded-xl text-zinc-200 transition-colors border border-zinc-750">
+                                Message
+                            </a>
+
+                            <!-- Checked Follow Button Node with Dynamic Utility Styling -->
+                            <button class="follow-btn flex items-center justify-center px-4 py-2.5 text-xs font-black rounded-xl transition-all duration-200 border border-transparent
+                                           {% if target_user in request.user.following.all %} bg-zinc-800 text-zinc-400 border-zinc-700/40 {% else %} bg-indigo-600 text-white hover:bg-indigo-700 {% endif %}"
+                                    data-user-id="{{ target_user.username }}">
+                                {% if target_user in request.user.following.all %} Following {% else %} Follow {% endif %}
+                            </button>
+                        </div>
+
+                    </div>
                 {% empty %}
                     <div class="col-span-2 text-center py-12 border border-dashed border-zinc-800 rounded-2xl">
                         <p class="text-sm text-zinc-500">No other active accounts found on the local node yet.</p>
@@ -60,4 +88,52 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript DOM Node Interaction Layer -->
+<script>
+    document.querySelectorAll('.follow-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            const userId = this.dataset.userId;
+            const currentButton = this;
+            const url = `/users/follow/${userId}/`;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP network error: status code ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    // Instantly flip the state values matching the backend response
+                    if (data.is_following) {
+                        currentButton.textContent = 'Following';
+                        currentButton.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-700', 'border-transparent');
+                        currentButton.classList.add('bg-zinc-800', 'text-zinc-400', 'border-zinc-700/40');
+                    } else {
+                        currentButton.textContent = 'Follow';
+                        currentButton.classList.remove('bg-zinc-800', 'text-zinc-400', 'border-zinc-700/40');
+                        currentButton.classList.add('bg-indigo-600', 'text-white', 'hover:bg-indigo-700', 'border-transparent');
+                    }
+                } else {
+                    console.error("Backend validation failed:", data.message);
+                }
+            })
+            .catch(err => {
+                console.error("Failed to execute follow toggle request operation stream:", err);
+                alert("Connection error: Could not complete follow state adjustment.");
+            });
+        });
+    });
+</script>
 {% endblock %}

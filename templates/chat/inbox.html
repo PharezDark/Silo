@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="lg:col-span-9 grid grid-cols-1 md:grid-cols-3 min-h-screen bg-zinc-950">
+
+    <div class="border-r border-zinc-900 flex flex-col h-screen sticky top-0">
+        <div class="px-6 py-4 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md">
+            <h2 class="text-xl font-bold text-zinc-100">Messages</h2>
+        </div>
+        <div class="flex-1 overflow-y-auto divide-y divide-zinc-900/60">
+            {% for t in threads %}
+                <a href="{% url 'chat:room' t.id %}"
+                   class="flex items-center gap-3 px-6 py-4 hover:bg-zinc-900/40 transition-colors
+                          {% if active_thread.id == t.id %}bg-zinc-900/60{% endif %}">
+
+                    <div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-sm font-semibold text-zinc-300 uppercase shrink-0 relative">
+                        {% if request.user == t.first_user %}
+                            {{ t.second_user.username|slice:":2" }}
+                        {% else %}
+                            {{ t.first_user.username|slice:":2" }}
+                        {% endif %}
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-semibold text-zinc-200 truncate">
+                                @{% if request.user == t.first_user %}{{ t.second_user.username }}{% else %}{{ t.first_user.username }}{% endif %}
+                            </p>
+
+                            {% if t.unread_count_for_user %}
+                                <span class="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center">
+                                    Active
+                                </span>
+                            {% endif %}
+                        </div>
+                        <p class="text-xs text-zinc-500 truncate mt-0.5">Click to view stream history</p>
+                    </div>
+                </a>
+            {% empty %}
+                <div class="text-center py-12 px-4">
+                    <p class="text-sm text-zinc-500">No active message threads yet.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="md:col-span-2 flex flex-col h-screen sticky top-0">
+        {% if active_thread %}
+            <div class="px-6 py-4 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-semibold text-zinc-400 uppercase">
+                    {{ other_user.username|slice:":2" }}
+                </div>
+                <h3 class="text-sm font-bold text-zinc-200">@{{ other_user.username }}</h3>
+            </div>
+
+            <div id="chat-log" class="flex-1 overflow-y-auto p-6 space-y-4 flex flex-col">
+                {% for msg in messages %}
+                    <div class="max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed break-words whitespace-pre-wrap
+                                {% if msg.sender == request.user %}
+                                    bg-indigo-600 text-white self-end rounded-br-none
+                                {% else %}
+                                    bg-zinc-900 text-zinc-200 self-start rounded-bl-none
+                                {% endif %}">
+                        {{ msg.message }}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="p-4 border-t border-zinc-900 bg-zinc-950">
+                <div class="flex items-start gap-3 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 focus-within:border-indigo-500 transition-colors">
+                    <textarea id="chat-message-input" placeholder="Type a message..." rows="1" required
+                              class="w-full bg-transparent border-none text-sm text-zinc-200 focus:outline-none placeholder:text-zinc-600 resize-none h-5 overflow-y-hidden"></textarea>
+                    <button id="chat-message-submit" class="text-indigo-400 hover:text-indigo-300 transition-colors font-semibold text-xs uppercase tracking-wider px-2 py-0.5 shrink-0">
+                        Send
+                    </button>
+                </div>
+            </div>
+
+            <script>
+                const threadId = "{{ active_thread.id }}";
+                const currentUser = "{{ request.user.username }}";
+                let chatSocket = null;
+
+                const chatLog = document.getElementById('chat-log');
+                const messageInputDom = document.getElementById('chat-message-input');
+                const submitButton = document.getElementById('chat-message-submit');
+
+                if (chatLog) {
+                    chatLog.scrollTop = chatLog.scrollHeight;
+                }
+
+                function connectWebSocket() {
+                    if (!threadId) return;
+
+                    const wsScheme = window.location.protocol === "https:" ? "wss://" : "ws://";
+                    chatSocket = new WebSocket(wsScheme + window.location.host + '/ws/chat/' + threadId + '/');
+
+                    chatSocket.onopen = function() {
+                        console.log("WebSocket connection established successfully.");
+                    };
+
+                    chatSocket.onmessage = function(e) {
+                        const data = JSON.parse(e.data);
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = "max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed break-words mt-2 whitespace-pre-wrap";
+
+                        if (data.sender === currentUser) {
+                            msgDiv.classList.add('bg-indigo-600', 'text-white', 'self-end', 'rounded-br-none');
+                        } else {
+                            msgDiv.classList.add('bg-zinc-900', 'text-zinc-200', 'self-start', 'rounded-bl-none');
+                        }
+
+                        msgDiv.textContent = data.message;
+                        chatLog.appendChild(msgDiv);
+                        chatLog.scrollTop = chatLog.scrollHeight;
+                    };
+
+                    chatSocket.onclose = function(e) {
+                        console.log('Socket closed. Attempting reconnect in 2 seconds...', e.reason);
+                        setTimeout(connectWebSocket, 2000);
+                    };
+
+                    chatSocket.onerror = function(err) {
+                        console.error("WebSocket encountered an error:", err);
+                        chatSocket.close();
+                    };
+                }
+
+                function sendMessage() {
+                    const message = messageInputDom.value.trim();
+                    if (message === '') return;
+
+                    if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                        chatSocket.send(JSON.stringify({ 'message': message }));
+                        messageInputDom.value = '';
+                        messageInputDom.style.height = 'auto';
+                    } else {
+                        console.error("WebSocket connection is not active.");
+                    }
+                }
+
+                // Fire connection execution
+                if (threadId) {
+                    connectWebSocket();
+                }
+
+                // Global, clean UI element event attachment bindings
+                if (submitButton) {
+                    submitButton.onclick = function(e) {
+                        e.preventDefault();
+                        sendMessage();
+                    };
+                }
+
+                if (messageInputDom) {
+                    messageInputDom.focus();
+
+                    // Unified handling for Shift + Enter multiline support and standard Enter submissions
+                    messageInputDom.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            sendMessage();
+                        }
+                    });
+
+                    messageInputDom.addEventListener('input', function() {
+                        this.style.height = 'auto';
+                        this.style.height = (this.scrollHeight - 4) + 'px';
+                    });
+                }
+            </script>
+        {% else %}
+            <div class="flex-1 flex flex-col justify-center items-center p-8 bg-zinc-950 max-w-2xl mx-auto text-center space-y-8">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500/10 to-violet-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-2xl animate-pulse">
+                    ⚡
+                </div>
+
+                <div class="space-y-2">
+                    <h3 class="text-2xl font-black tracking-tight text-zinc-100">Secure Messaging Hub</h3>
+                    <p class="text-sm text-zinc-500 max-w-md mx-auto">
+                        Select an existing correspondence channel from the list view stream or initiate a live encrypted thread node with peer creators below.
+                    </p>
+                </div>
+
+                <div class="w-full h-px bg-zinc-900 my-2"></div>
+
+                <div class="w-full space-y-4">
+                    <h4 class="text-xs font-mono text-zinc-500 uppercase tracking-widest text-left">Suggested Connections</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <a href="{% url 'explore' %}" class="flex items-center justify-between p-4 bg-zinc-900/40 border border-zinc-900 rounded-xl hover:border-zinc-800 transition-colors group text-left">
+                            <div class="space-y-0.5">
+                                <p class="text-sm font-bold text-zinc-200 group-hover:text-indigo-400 transition-colors">Explore Feed</p>
+                                <p class="text-[11px] text-zinc-500">Discover active developers online</p>
+                            </div>
+                            <span class="text-zinc-600 group-hover:text-zinc-400 transition-colors">→</span>
+                        </a>
+
+                        <div class="flex items-center justify-between p-4 bg-zinc-900/20 border border-zinc-900/60 rounded-xl text-left opacity-60">
+                            <div class="space-y-0.5">
+                                <p class="text-sm font-bold text-zinc-400">System Status</p>
+                                <p class="text-[11px] text-zinc-600">All channels fully operational</p>
+                            </div>
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-md shadow-emerald-500/40"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

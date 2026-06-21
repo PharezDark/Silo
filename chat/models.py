@@ -14,11 +14,19 @@ class Thread(models.Model):
     def __str__(self):
         return f"Chat between {self.first_user.username} and {self.second_user.username}"
 
+    # Calculate unread messages intended for the specified user
+    def unread_count_for_user(self, user):
+        return self.messages.filter(is_read=False).exclude(sender=user).count()
+
+
 class ChatMessage(models.Model):
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     message = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    # Track message delivery status
+    is_read = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['timestamp']

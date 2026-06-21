@@ -1,10 +1,13 @@
 import uuid
-from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.contrib.auth.models import AbstractUser
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
-# Create your models here.
+
+# ================= CUSTOM USER MODEL =================
 
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -25,7 +28,7 @@ class User(AbstractUser):
         through_fields=('follower', 'following'),
         symmetrical=False,
         related_name='followers',
-        blank=True  # Added blank=True from your first block so registration doesn't require relationships
+        blank=True  # Allows registration without forcing relationships
     )
 
     def save(self, *args, **kwargs):
@@ -58,6 +61,28 @@ class User(AbstractUser):
         return f"@{self.username} ({self.id})"
 
 
+# ================= PROFILE MODEL =================
+
+class Profile(models.Model):
+    # Links directly to your custom User model defined above
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+
+    # Custom developer metadata attributes
+    bio = models.TextField(max_length=500, blank=True)
+    tech_stack = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Enter languages separated by spaces, e.g. Python Django Tailwind"
+    )
+    github_url = models.URLField(max_length=200, blank=True)
+    avatar_color = models.CharField(max_length=7, default="#4f46e5")  # Hex badge layout representation
+
+    def __str__(self):
+        return f"Profile Node for @{self.user.username}"
+
+
+# ================= RELATIONSHIP LINK TABLE =================
+
 class Follow(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following_relationships')
@@ -69,4 +94,21 @@ class Follow(models.Model):
         unique_together = ('follower', 'following')
 
     def __str__(self):
-        return f"@{self.follower.username} follows @{self.following.username}" # Fixed string interpolation syntax
+        return f"@{self.follower.username} follows @{self.following.username}"
+
+
+# ================= SIGNALS CONDUIT GATEWAY =================
+# These methods automatically sync the Profile lifecycle with the custom User account
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    """Fires immediately after a new User record is committed to the database."""
+    if created:
+        Profile.objects.create(user=instance)
+
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    """Ensures that whenever user details change, the profile record updates too."""
+    if hasattr(instance, 'profile'):
+        instance.profile.save()

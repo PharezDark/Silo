@@ -33,15 +33,8 @@ class HomeTimelineView(ListView):
         tech = int(self.request.GET.get('tech', 50))
         art = int(self.request.GET.get('art', 50))
 
-        # 2. Check if the user session is authenticated before running parameters
-        if self.request.user.is_authenticated:
-            # Filter posts: Must be from a user they follow OR written by them
-            queryset = Post.objects.filter(
-                Q(author__followers=self.request.user) | Q(author=self.request.user)
-            ).distinct()
-        else:
-            # Fallback for anonymous guests viewing the open portal
-            queryset = Post.objects.all()
+        # 2. Fetch all posts regardless of authentication state to show global timeline
+        queryset = Post.objects.all().select_related('author')
 
         # 3. Apply the layout range matrix filtering sliders
         if tech < 20:

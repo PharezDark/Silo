@@ -41,6 +41,7 @@ urlpatterns = [
     # Federated App Ecosystem Sub-routing Modules
     path('feed/', include('posts.urls')),
     path('billing/', include('billing.urls')),
+    path('messages/', include('chat.urls')),
 
     # Navigation Targets
     path('explore/', ExploreView.as_view(), name='explore'),

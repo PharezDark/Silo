@@ -193,8 +193,8 @@ TEMPLATES = [
     },
 ]
 
-ASGI_APPLICATION = 'silo_core.asgi.application'
 WSGI_APPLICATION = 'silo_core.wsgi.application'
+ASGI_APPLICATION = 'silo_core.asgi.application'
 
 # Core Relational Infrastructure Configuration
 DATABASES = {
@@ -275,9 +275,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
-            # ADD OR MODIFY THIS LINE TO MATCH CHANNELS WITH YOUR ACTIVE REDIS WORKER DB
-            "db": 1,
+            "hosts": ["redis://127.0.0.1:6379/0"],
         },
     },
 }
@@ -289,4 +287,4 @@ CELERY_TASK_ALWAYS_EAGER = True
 
 LOGIN_URL = 'login'
 # Where to send users immediately after they log out
-LOGOUT_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = 'welcome'

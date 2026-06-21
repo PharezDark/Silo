@@ -9,6 +9,7 @@ from .forms import CustomUserCreationForm  # Custom registration form we created
 
 User = get_user_model()
 
+# ================= EXPLORE DISCOVERY LAYER =================
 
 class ExploreView(LoginRequiredMixin, ListView):
     model = User
@@ -20,6 +21,8 @@ class ExploreView(LoginRequiredMixin, ListView):
         # We exclude the current user from their own discovery list
         return User.objects.exclude(id=self.request.user.id).order_by('?')[:10]
 
+
+# ================= DECENTRALIZED IDENTITY MATRIX =================
 
 class ActivityPubActorView(View):
     def get(self, request, username, *args, **kwargs):
@@ -54,6 +57,8 @@ class ActivityPubActorView(View):
         return JsonResponse(actor_data, content_type="application/activity+json")
 
 
+# ================= AUTHENTICATION SUBSYSTEMS =================
+
 class RegisterNodeView(View):
     def get(self, request):
         form = CustomUserCreationForm()
@@ -86,28 +91,36 @@ class LoginNodeView(View):
 class LogoutNodeView(View):
     def get(self, request):
         logout(request)
-        return redirect('waitlist:landing')
+        return redirect('welcome')
 
+
+# ================= RELATIONSHIP TOGGLE SYSTEM =================
 
 class ToggleFollowView(LoginRequiredMixin, View):
+    """Asynchronously creates or updates target-node following boundaries."""
     def post(self, request, username):
         target_user = get_object_or_404(User, username=username)
 
-        # Prevent users from following themselves
+        # Guard Clause: Prevent users from following themselves
         if target_user == request.user:
-            return JsonResponse({"error": "You cannot follow yourself."}, status=400)
+            return JsonResponse({
+                'status': 'error',
+                'message': 'You cannot follow yourself.'
+            }, status=400)
 
+        # Toggle dynamic ManyToMany link relationships via database bridge
         if request.user.following.filter(id=target_user.id).exists():
-            # Already following -> Unfollow
+            # Relationship exists -> Delete it (Unfollow)
             request.user.following.remove(target_user)
             is_following = False
         else:
-            # Not following -> Follow
+            # No relationship -> Create it (Follow)
             request.user.following.add(target_user)
             is_following = True
 
         return JsonResponse({
-            "success": True,
-            "is_following": is_following,
-            "follower_count": target_user.followers.count()
+            'status': 'success',
+            'success': True,
+            'is_following': is_following, # Tells JS exactly what UI layout to paint
+            'follower_count': target_user.followers.count()
         })
