@@ -21,17 +21,14 @@ from django.conf.urls.static import static
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from posts.views import WelcomePageView  # Import the gatekeeper view
-from users.views import RegisterNodeView, LoginNodeView, LogoutNodeView, ToggleFollowView, ExploreView
-
+from users.views import RegisterNodeView, LoginNodeView, LogoutNodeView, ExploreView, toggle_follow_view
 
 # Simple class-based views to serve the placeholder layout shells
 class ChatView(LoginRequiredMixin, TemplateView):
     template_name = 'pages/chat.html'
 
-
 class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'pages/profile.html'
-
 
 urlpatterns = [
     # Core Admin & Root Routing Gatekeeper
@@ -39,6 +36,7 @@ urlpatterns = [
     path('', WelcomePageView.as_view(), name='welcome'),
 
     # Federated App Ecosystem Sub-routing Modules
+    path('', include('users.urls')),
     path('feed/', include('posts.urls')),
     path('billing/', include('billing.urls')),
     path('messages/', include('chat.urls')),
@@ -54,7 +52,8 @@ urlpatterns = [
     path('auth/logout/', LogoutNodeView.as_view(), name='logout'),
 
     # Social Interaction Endpoints
-    path('users/<str:username>/follow/', ToggleFollowView.as_view(), name='toggle_follow'),
+    # FIXED: Changed from <int:user_id> to match your frontend UUID string format layout
+    path('users/follow/<uuid:user_id>/', toggle_follow_view, name='toggle_follow'),
 ]
 
 # Media assets serving during local development

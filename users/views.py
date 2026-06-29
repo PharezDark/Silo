@@ -3,11 +3,14 @@ from django.http import JsonResponse
 from django.views import View
 from django.views.generic import ListView
 from django.contrib.auth import login, authenticate, logout, get_user_model
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.forms import AuthenticationForm
-from .forms import CustomUserCreationForm  # Custom registration form we created earlier
+from .forms import CustomUserCreationForm
 
 User = get_user_model()
+
 
 # ================= EXPLORE DISCOVERY LAYER =================
 
@@ -96,31 +99,61 @@ class LogoutNodeView(View):
 
 # ================= RELATIONSHIP TOGGLE SYSTEM =================
 
-class ToggleFollowView(LoginRequiredMixin, View):
+@login_required
+@require_POST
+def toggle_follow_view(request, user_id):
     """Asynchronously creates or updates target-node following boundaries."""
-    def post(self, request, username):
-        target_user = get_object_or_404(User, username=username)
+    target_user = get_object_or_404(User, id=user_id)
 
-        # Guard Clause: Prevent users from following themselves
-        if target_user == request.user:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'You cannot follow yourself.'
-            }, status=400)
-
-        # Toggle dynamic ManyToMany link relationships via database bridge
-        if request.user.following.filter(id=target_user.id).exists():
-            # Relationship exists -> Delete it (Unfollow)
-            request.user.following.remove(target_user)
-            is_following = False
-        else:
-            # No relationship -> Create it (Follow)
-            request.user.following.add(target_user)
-            is_following = True
-
+    # Guard Clause: Prevent users from following themselves
+    if target_user == request.user:
         return JsonResponse({
-            'status': 'success',
-            'success': True,
-            'is_following': is_following, # Tells JS exactly what UI layout to paint
-            'follower_count': target_user.followers.count()
-        })
+            'status': 'error',
+            'message': 'You cannot follow yourself.'
+        }, status=400)
+
+    # Toggle dynamic ManyToMany link relationships via database bridge
+    if request.user.following.filter(id=target_user.id).exists():
+        # Relationship exists -> Delete it (Unfollow)
+        request.user.following.remove(target_user)
+        is_following = False
+    else:
+        # No relationship -> Create it (Follow)
+        request.user.following.add(target_user)
+        is_following = True
+
+    return JsonResponse({
+        'status': 'success',
+        'success': True,
+        'is_following': is_following,  # Tells JS exactly what UI layout to paint
+        'follower_count': target_user.followers.count()
+    })
+
+
+def get_connections_list(request, user_id, connection_type):
+    """Returns a clean JSON stream of a user's followers or following network list."""
+    target_user = get_object_or_404(User, id=user_id)
+    data = []
+
+    if connection_type == 'followers':
+        # Grab everyone who follows this target user
+        connections = target_user.followers.all()
+        for conn in connections:
+            data.append({
+                'username': conn.username,
+                'id': str(conn.id),
+                'avatar_color': getattr(conn.profile, 'avatar_color', '#4f46e5') if hasattr(conn,
+                                                                                            'profile') else '#4f46e5'
+            })
+    elif connection_type == 'following':
+        # Grab everyone this target user is following
+        connections = target_user.following.all()
+        for conn in connections:
+            data.append({
+                'username': conn.username,
+                'id': str(conn.id),
+                'avatar_color': getattr(conn.profile, 'avatar_color', '#4f46e5') if hasattr(conn,
+                                                                                            'profile') else '#4f46e5'
+            })
+
+    return JsonResponse({'status': 'success', 'users': data})
